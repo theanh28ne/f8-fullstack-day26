@@ -56,6 +56,8 @@ const player = {
         }
     ],
 
+    _pool: [],
+
     _currenIndex: 0,
     getCurrenSong() {
         return this._songs[this._currenIndex]
@@ -69,6 +71,10 @@ const player = {
     },
     //khởi tạo
     init() {
+        this._pool = this._songs.map((song) => {
+            return song.id;
+        })
+
         this._playlist.addEventListener("click", (e) => {
             const song = e.target.closest(".song");
             if (song) {
@@ -114,26 +120,27 @@ const player = {
             this._progress.value = currentTime / duration * 100;
         })
         this._audio.addEventListener("ended", () => {
+            console.log(this._pool);
+
             if (this._isRepeat) {
                 this._audio.play();
             } else if (this._isRandom) {
-                let pool = this._songs.map((song) => {
-                    return song.id;
-                })
 
-                if (pool.length === 0) {
-                    pool = this._songs.map((song) => {
+                if (this._pool.length === 0) {
+                    this._pool = this._songs.map((song) => {
                         return song.id;
                     })
+                    console.log("vao day");
+
                 }
-                const index = Math.floor(Math.random() * pool.length);
-                const value = pool[index];
-                pool.splice(index, 1);
-                this._currenIndex = value;
+                const index = Math.floor(Math.random() * this._pool.length);
+                const value = this._pool[index];
+                this._pool.splice(index, 1);
+                this._currenIndex = value - 1;
+                console.log(value);
+
                 this.render();
                 this._audio.play();
-
-
             } else {
                 this.handleControll(this._NEXT);
                 this._audio.play();

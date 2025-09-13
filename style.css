@@ -203,3 +203,7 @@ header h2 {
 .progress_area .progress {
     flex: 1;
 }
+
+.btn:hover {
+    cursor: pointer;
+}

@@ -1,3 +1,14 @@
+function toMMSS(sec) {
+    // Chuẩn hoá input
+    if (typeof sec !== "number" || !isFinite(sec) || sec < 0) sec = 0;
+
+    sec = Math.floor(sec);           // bỏ phần thập phân
+    const m = Math.floor(sec / 60);  // tổng phút (có thể > 59)
+    const s = String(sec % 60).padStart(2, "0");// giây còn lại 0..59
+
+    return `${m}:${s}`;
+}
+
 
 
 const player = {
@@ -56,6 +67,8 @@ const player = {
         }
     ],
 
+
+
     _pool: [],
 
     _currenIndex: 0,
@@ -64,6 +77,14 @@ const player = {
     },
 
 
+    getPool() {
+        return this._songs.filter((song) => {
+            return song.id !== this._currenIndex;
+        }).map((song) => {
+            return song.id;
+        })
+    },
+
     handleControll(step) {
         this._currenIndex = (this._currenIndex + step + this._songs.length) % this._songs.length;
         this.render();
@@ -71,10 +92,40 @@ const player = {
     },
     //khởi tạo
     init() {
-        this._pool = this._songs.map((song) => {
-            return song.id;
+        document.addEventListener("keydown", (e) => {
+            console.log(e.code === "ArrowLeft");
+
+            if (e.code === "Space") {
+                if (this._audio.paused) {
+                    this._audio.play();
+                } else {
+                    this._audio.pause();
+                }
+            } else if (e.code === "ArrowRight") {
+                this.handleControll(this._NEXT);
+                this._audio.play();
+            } else if (e.code === "ArrowLeft") {
+                console.log("vào đây");
+
+
+                if (this._audio.currentTime < 2) {
+                    this.handleControll(this._PREV);
+                    this._audio.play();
+
+                }
+                else {
+                    this.render();
+                    this._audio.play();
+
+                }
+            }
+
         })
 
+
+
+
+        this._pool = this.getPool();
         this._playlist.addEventListener("click", (e) => {
             const song = e.target.closest(".song");
             if (song) {
@@ -109,8 +160,19 @@ const player = {
 
         })
         this._prev.addEventListener("click", () => {
-            this.handleControll(this._PREV);
-            this._audio.play();
+            console.log(this._audio.currentTime);
+
+            if (this._audio.currentTime < 2) {
+                this.handleControll(this._PREV);
+                this._audio.play();
+            }
+            else {
+                this.render();
+                this._audio.play();
+
+            }
+
+
 
         })
         this._audio.addEventListener("timeupdate", () => {
@@ -127,17 +189,20 @@ const player = {
             } else if (this._isRandom) {
 
                 if (this._pool.length === 0) {
-                    this._pool = this._songs.map((song) => {
-                        return song.id;
-                    })
-                    console.log("vao day");
+                    this._pool = this.getPool();
+                    console.log(this._currenIndex);
+
+                    console.log("vao day 1");
 
                 }
+
                 const index = Math.floor(Math.random() * this._pool.length);
                 const value = this._pool[index];
                 this._pool.splice(index, 1);
                 this._currenIndex = value - 1;
-                console.log(value);
+                console.log(this._currenIndex);
+
+                console.log("vao day 2");
 
                 this.render();
                 this._audio.play();
@@ -182,7 +247,7 @@ const player = {
         this._audio.src = this.getCurrenSong().path;
 
         this._audio.addEventListener("loadedmetadata", () => {
-            this._durationSong.textContent = Math.floor(this._audio.duration);
+            this._durationSong.textContent = toMMSS(Math.floor(this._audio.duration));
         });
         // const { duration, currentTime } = this._audio;
         // if (!duration || this._isSeeking) return;
